@@ -1,35 +1,37 @@
 package com.RobotArmSample.MQTT;
+import org.camunda.bpm.engine.delegate.BpmnError;
 import org.eclipse.paho.client.mqttv3.IMqttToken;
 import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
+import javax.swing.plaf.PanelUI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Stack;
 import java.util.UUID;
 
 public  class IotModules {
-    static MqttAsyncClient myClient;
-    static MqttDevice myCallback;
+    public static MqttAsyncClient myClient;
+    public static MqttDevice myCallback;
+    public static ArrayList<String> RobotArmName;
+
+    // static String serverUrl = "tcp://172.16.1.33:1883";
     static String serverUrl = "tcp://mqtt.eclipseprojects.io:1883";
-////button////
-    static String button_setModule1 = "userM/line1/sensor1/set/module1";//led
-    static String button_setRequest = "userM/line1/sensor1/set/request";
-    static String button_setStatus = "userM/line1/sensor1/set/status";
 
-    static String button_getStatus = "userM/line1/sensor1/get/status";
-    static String button_getData1 = "userM/line1/sensor1/get/data1";//button
+    static String inDevices = "userM/devices/in";
+    static String outDevices = "userM/devices/out";
 
-    ////robotArmKuka///
-    static String robotArmKuka_setModule1 = "userM/line1/robotArmKuka/set/module1";
-    static String robotArmKuka_setRequest = "userM/line1/robotArmKuka/set/request";
-    static String robotArmKuka_setStatus = "userM/line1/robotArmKuka/set/status";
+    //static String inKuka= "Kuka/in";
+    //static String outKuka = "Kuka/out";
 
-    static String robotArmKuka_getStatus = "userM/line1/robotArmKuka/get/status";
-    static String robotArmKuka_getData1 = "userM/line1/robotArmKuka/get/data1";
+    static String inWatcher = "userM/watcher/in";
+    static String outWatcher = "userM/watcher/out";
 
-    ////watchingClient////
-    static String watchingClient_setModule1 = "userM/line1/watchingClient/set/module1";
-    static String watchingClient_setRequest = "userM/line1/watchingClient/set/request";
-    static String watchingClient_setStatus = "userM/line1/watchingClient/set/status";
+    static int Qos = 0;
+    static int UID = 0;
 
+    public static  String button1Name="button1";
+    public static  String RobotArm1Name;
 
     static public void Begin() throws Exception{
         myClient = new MqttAsyncClient(serverUrl, UUID.randomUUID().toString());
@@ -37,119 +39,150 @@ public  class IotModules {
         myClient.setCallback(myCallback);
         IMqttToken token = myClient.connect();
         token.waitForCompletion();
-    }
-    ////////button////////
-    static public void ButtonBegin() throws Exception{
-        myClient.subscribe(button_getStatus, 0);
-        myClient.subscribe(button_getData1, 0);
+        myClient.subscribe(outDevices, Qos);
+        myClient.subscribe(outWatcher, Qos);
+        //myClient.subscribe(outKuka, Qos);
+        RobotArmName = new ArrayList<String>();
+
     }
 
-    static public  void ButtonSetModule1(String message)throws Exception {
-        myClient.publish(button_setModule1,new MqttMessage(message.getBytes()) );
+    static public  void InDevices(String message)throws Exception {
+        myClient.publish(inDevices,new MqttMessage(message.getBytes()) );
     }
 
-    static public  void ButtonSetRequest(String message)throws Exception {
-        myClient.publish(button_setRequest,new MqttMessage(message.getBytes()) );
+    static public  void InDevicesData(String Name, String data)throws Exception {
+        String msg = "<Module><Name>"+Name+"</Name><UID>" + UID +
+                "</UID><ModuleType>all</ModuleType><Data>" + data +
+                "</Data></Module>";
+
+        myClient.publish(inDevices,new MqttMessage(msg.getBytes()) );
+        UID++;
+    }
+    static public  void InDevicesData(ModuleType moduleType, String Name, String data)throws Exception {
+        String msg = "<Module><Name>"+Name+"</Name><ModuleType>"+moduleType.toString()+"</ModuleType><UID>" + UID +
+                "</UID> <Data>" + data +
+                "</Data></Module>";
+
+        myClient.publish(inDevices,new MqttMessage(msg.getBytes()) );
+        UID++;
     }
 
-    public static void ButtonSetStatus(String message)throws Exception {
-        myClient.publish(button_setStatus,new MqttMessage(message.getBytes()) );
+    static public  void InWatchCleent(String message)throws Exception {
+        myClient.publish(inWatcher,new MqttMessage(message.getBytes()) );
     }
 
-    public static String ButtonGetStatus()throws Exception {
-        for(int i = 0; i < 10; i++){
-            myCallback.pastMessageClear();
-            myClient.publish(button_setStatus,new MqttMessage(("OK").getBytes()));
+
+    //ожидание принятия сообщения "start" с смартфона-клиента
+    public static void WatсherAvailable()throws Exception {
+        InWatchCleent("ожидание запуска");
+        myCallback.pastMessageClear();
+        while(true){
             Thread.sleep(10);
-            if(myCallback.pastMessage.getToken().equals(button_getStatus)){
-                return myCallback.pastMessage.getMessage();
+            if(myCallback.pastMessage.getToken().equals(outWatcher)){
+                String str= myCallback.pastMessage.getMessage();
+                if(str.equals("start"))return;
             }
         }
-        return  "";
     }
+//    // todo
+//    public static boolean RollCall()throws Exception{
+//        myCallback.StackMessageClear();
+//        IotModules.InDevicesData(ModuleType.all,"all","<Request>status</Request>");
+//        Thread.sleep(500);
+//       if( myCallback.getStackMessage().empty())return false;
+//
+//       while (!myCallback.getStackMessage().empty()){
+//           Message mes = myCallback.getStackMessage().pop();
+//           if(mes.getToken().equals(outDevices)){
+//               String name = findText(mes.getMessage(),"Name");
+//               String ModuleType = findText(mes.getMessage(),"ModuleType");
+//               if((name.length()>0)&&(ModuleType.length()>0)){
+//                   int type = Integer.parseInt(ModuleType);
+//
+//                   }
+//               }
+//           }
+//       return false;
+//    }
 
-    public static String ButtonGetData1()throws Exception {
-        for(int i = 0; i < 10; i++){
-            myCallback.pastMessageClear();
-            myClient.publish(button_setRequest,new MqttMessage(("data1").getBytes()));
-            Thread.sleep(10);
-            if(myCallback.pastMessage.getToken().equals(button_getData1)){
-                return myCallback.pastMessage.getMessage();
+    public static String SelectRobotArm()throws Exception{
+        String nameExecutor;
+        Stack<String> stackMessage = new Stack<String>();
+        int numPast = IotModules.myCallback.getStackMessage().size();
+        IotModules.InDevicesData(ModuleType.robotArm,"all","<Request>status</Request>");
+        Thread.sleep(700);
+
+        int newMessagesCount = IotModules.myCallback.getStackMessage().size()-numPast;
+        if(newMessagesCount<=0) throw  new Exception("Robot Arm not Found");
+
+        for(int i = 0; i < newMessagesCount ; i++){
+            Message mes = IotModules.myCallback.getStackMessage().pop();
+            if(mes.isModule()){
+                if(mes.getName().length()>0 && mes.getStatus()==0&&mes.getModuleType()==ModuleType.robotArm) stackMessage.add(mes.getName());
             }
         }
-        return  "";
+
+        if(stackMessage.size()>0)return  stackMessage.pop();
+        else throw  new Exception("Robot Arm not Found");
+
     }
 
-    public static boolean ButtonGetData1Bool()throws Exception {
-        for(int i = 0; i < 10; i++){
-            myCallback.pastMessageClear();
-            myClient.publish(button_setRequest,new MqttMessage(("data1").getBytes()));
-            Thread.sleep(10);
-            if(myCallback.pastMessage.getToken().equals(button_getData1)){
-                 if( myCallback.pastMessage.getMessage().equals("1"))return  true;
+    //проверить отправку статуса
+    public static boolean  statusСonfirmed(String name ){
+        Message outMes = myCallback.findMessage(name);
+        if(outMes==null) return  false;
+        if(outMes.getStatus()==0)return  true;
+        else return false;
+    }
+
+    public static boolean  statusСonfirmed(String name,int howStatus ){
+        Message outMes = myCallback.findMessage(name);
+        if(outMes==null) return  false;
+        if(outMes.getStatus()==howStatus)return  true;
+        else return false;
+    }
+    //ожидание статуса 0 (устройство свободно для команд)
+    public static void  waitingStatusСonfirmed(String name ){
+        boolean status;
+        do{
+            status = statusСonfirmed(name);
+        }while (!status);
+    }
+
+    public static boolean  waitStatusСonfirmed(String name,int mulles ) throws Exception {
+        InDevicesData(ModuleType.all,button1Name,"<Request>status</Request>");
+        //проверяем ответ 10 раз в течение периода приёма
+        try {
+            for (int i = 0; i<10; i++){
+                Thread.sleep(mulles/10);
+                if(statusСonfirmed(name)) return  true;
             }
+            return false;
+
         }
-        return  false;
-    }
-
-////////robotArmKuka////////
-
-    static public void RobotArmKukaBegin() throws Exception{
-        myClient.subscribe(robotArmKuka_getStatus, 0);
-        myClient.subscribe(robotArmKuka_getData1, 0);
-    }
-
-    static public  void RobotArmKukaSetModule1(String message)throws Exception {
-        myClient.publish(robotArmKuka_setModule1,new MqttMessage(message.getBytes()) );
-    }
-
-    static public  void RobotArmKukaSetRequest(String message)throws Exception {
-        myClient.publish(robotArmKuka_setRequest,new MqttMessage(message.getBytes()) );
-    }
-
-    public static void RobotArmKukaSetStatus(String message)throws Exception {
-        myClient.publish(robotArmKuka_setStatus,new MqttMessage(message.getBytes()) );
-    }
-
-    public static String RobotArmKukaGetStatus()throws Exception {
-        for(int i = 0; i < 10; i++){
-            myCallback.pastMessageClear();
-            myClient.publish(robotArmKuka_setStatus,new MqttMessage(("OK").getBytes()));
-            Thread.sleep(10);
-            if(myCallback.pastMessage.getToken().equals(robotArmKuka_getStatus)){
-                return myCallback.pastMessage.getMessage();
-            }
+        catch (Exception ex){
+            return false;
         }
-        return  "";
     }
 
-    public static String RobotArmKukaGetData1()throws Exception {
-        for(int i = 0; i < 10; i++){
-            myCallback.pastMessageClear();
-            myClient.publish(robotArmKuka_setRequest,new MqttMessage(("data1").getBytes()));
-            Thread.sleep(10);
-            if(myCallback.pastMessage.getToken().equals(robotArmKuka_getData1)){
-                return myCallback.pastMessage.getMessage();
-            }
+    public static boolean ButtonIsPressed() throws Exception {
+        //myCallback.pastMessageClear();
+        Message mes =  myCallback.findMessage(button1Name);
+        if (findText( mes.getData(), "Pin16").equals("1"))return  true;
+        else  return false;
+    }
+
+    public static String findText(String str, String findContext)throws  Exception
+    {
+        int find1 = str.indexOf("<" + findContext + ">");
+        int find2 = str.indexOf("</" + findContext + ">");
+        String findStr = "";
+        for (int i = find1 + ("<" + findContext + ">").length(); i < find2; i++)
+        {
+            findStr += (char)str.getBytes()[i];
         }
-        return  "";
+
+        return findStr;
     }
-
-    //////watchingClient//////
-
-    static public  void WatchingClientSetModule1(String message)throws Exception {
-        myClient.publish(watchingClient_setModule1,new MqttMessage(message.getBytes()) );
-    }
-
-    static public  void WatchingClientSetRequest(String message)throws Exception {
-        myClient.publish(watchingClient_setRequest,new MqttMessage(message.getBytes()) );
-    }
-
-    public static void WatchingClientSetStatus(String message)throws Exception {
-        myClient.publish(watchingClient_setStatus,new MqttMessage(message.getBytes()) );
-    }
-
 
 }
-
-

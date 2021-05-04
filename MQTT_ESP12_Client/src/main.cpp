@@ -2,32 +2,34 @@
 
 #include <ESP8266WiFi.h>
 #include <PubSubClient.h>
-#include <DallasTemperature.h>
+#include <WiFi.h>
+#include <AsyncMqttClient.h>
+//#include <OneWire.h>
+//#include <DallasTemperature.h>
+const int butPin = 16;
 
-#define butPin 16
+//const char *ssid = "Keenetic-6756"; // Имя  точки доступа
+//const char *pass = "03403blo";		// Пароль от точки доступа
 
-const char *ssid = "Keenetic-6756"; // Имя  точки доступа
-const char *pass = "03403blo";		// Пароль от точки доступа
+const char *ssid = "Robotavr";		 // Имя  точки доступа
+const char *pass = "Qaz1234Wsx5678"; // Пароль от точки доступа
 
 const char *mqtt_server = "mqtt.eclipseprojects.io"; // Имя сервера MQTT
 const int mqtt_port = 1883;							 // Порт для подключения к серверу MQTT
-const char *mqtt_user = "Login";					 // Логи от сервер
-const char *mqtt_pass = "Pass";						 // Пароль от сервера
-
+const char *mqtt_user = "";							 // Логи от сервер
+const char *mqtt_pass = "";							 // Пароль от сервера
+const char *deviceName = "button1";
+const char *moduleType = "modules";
 #define BUFFER_SIZE 100
 
 bool LedState = false;
 bool pinState = false;
-void TempSend();
+
 WiFiClient wclient;
 PubSubClient client(wclient, mqtt_server, mqtt_port);
-
-String setModule1 = "userM/line1/sensor1/set/module1"; //led
-String setRequest = "userM/line1/sensor1/set/request";
-String setStatus = "userM/line1/sensor1/set/status";
-
-String getStatus = "userM/line1/sensor1/get/status";
-String getData1 = "userM/line1/sensor1/get/data1"; //button
+void PrintStatus();
+String inDevices = "userM/devices/in";
+String outDevices = "userM/devices/out";
 
 enum EventRequest
 {
@@ -37,23 +39,19 @@ enum EventRequest
 	continueTransmin
 };
 
-EventRequest receiveEvent = byRequest;
+EventRequest receiveEvent = change;
 
 // Функция получения данных от сервера
 void callback(const MQTT::Publish &pub);
+void PrintButtonStatus(bool pinState);
+void TempSend();
+String findText(String str, String findContext);
+void PrintMessage(String str, int status = 0);
 
 void setup()
 {
 	pinMode(LED_BUILTIN, 1);
-	digitalWrite(LED_BUILTIN, 1);
-	delay(500);
-	digitalWrite(LED_BUILTIN, 0);
-	delay(500);
-	digitalWrite(LED_BUILTIN, 1);
-	delay(500);
-	digitalWrite(LED_BUILTIN, 0);
-	delay(500);
-	//sensors.begin();
+
 	Serial.begin(9600);
 	delay(10);
 	Serial.println();
@@ -82,17 +80,19 @@ void loop()
 		if (!client.connected())
 		{
 			Serial.println("Connecting to MQTT server");
-			// if (client.connect(MQTT::Connect("arduinoClient2")
-			// 					   .set_auth(mqtt_user, mqtt_pass)))
 			if (client.connect(MQTT::Connect("arduinoClient2")
 								   .set_auth(mqtt_user, mqtt_pass)))
 			{
 				Serial.println("Connected to MQTT server");
 				client.set_callback(callback);
-
-				client.subscribe(setModule1);
-				client.subscribe(setRequest);
-				client.subscribe(setStatus);
+				client.subscribe(inDevices);
+				digitalWrite(LED_BUILTIN, 1);
+				delay(50);
+				digitalWrite(LED_BUILTIN, 0);
+				delay(100);
+				digitalWrite(LED_BUILTIN, 1);
+				delay(50);
+				digitalWrite(LED_BUILTIN, 0);
 			}
 			else
 			{
@@ -115,7 +115,7 @@ void TempSend()
 	pinState = !digitalRead(butPin);
 	if (receiveEvent == continueTransmin)
 	{
-		client.publish(getData1, String(pinState));
+		//client.publish(getData1, String(pinState));
 		Serial.println(pinState);
 		delay(100);
 	}
@@ -124,9 +124,8 @@ void TempSend()
 		delay(20);
 		if (pastPinState != pinState)
 		{
-
 			pastPinState = pinState;
-			client.publish(getData1, String(pinState));
+			PrintButtonStatus(pinState);
 			Serial.println(pinState);
 		}
 	}
@@ -139,7 +138,7 @@ void TempSend()
 			pastPinState = pinState;
 			if (pinState)
 			{
-				client.publish(getData1, String(pinState));
+				PrintButtonStatus(pinState);
 				Serial.println(pinState);
 			}
 		}
@@ -154,49 +153,135 @@ void callback(const MQTT::Publish &pub)
 	Serial.println(pub.payload_string());
 
 	String payload = pub.payload_string();
+	payload.trim();
+	String name = findText(payload, "Name");
+	String ModuleType = findText(payload, "ModuleType");
+	String Request = findText(payload, "Request");
 
-	if (String(pub.topic()) == setStatus)
+	if (name.equals("all")&&(ModuleType.equals(moduleType)||ModuleType.equals("all")))
 	{
-		client.publish(getStatus, "OK");
-		Serial.println("OK");
+		if (Request.equals("status"))
+		{
+			PrintStatus();
+		}
+		PrintStatus();
+		return;
 	}
-	else if (String(pub.topic()) == setModule1) // включаем или выключаем светодиод
+
+	String data = findText(payload, "Data");
+	String led = findText(payload, "Led");
+	String WorkMode = findText(payload, "WorkMode");
+
+	Serial.println("Name:\t" + name);
+	Serial.println("led:\t" + led);
+	if (name.equals(deviceName) && (ModuleType.equals(moduleType)||ModuleType.equals("all")))
 	{
-		int stled = payload.toInt();
-		digitalWrite(LED_BUILTIN, stled);
-	}
-	else if (String(pub.topic()) == setRequest)
-	{
-		//int stled = payload.toInt();
-		client.publish(getData1, String(pinState));
-		Serial.println(pinState);
-		if (payload == "changeEvent")
+		if (led.length() > 0)
+		{
+			Serial.println("Led:\t" + led);
+			digitalWrite(LED_BUILTIN, led.toInt());
+			PrintStatus();
+		}
+		else if (Request.equals("status"))
+		{
+			PrintStatus();
+			Serial.println("PrintStatus OK");
+
+		}
+		else if (WorkMode.equals("changeEvent"))
 		{
 			receiveEvent = change;
-			client.publish(getStatus, "changeEvent OK");
 			Serial.println("changeEvent OK");
+			PrintMessage("changeEvent");
 		}
-		else if (payload == "changeUpEvent")
+		else if (WorkMode.equals("changeUpEvent"))
 		{
 			receiveEvent = changeUp;
-			client.publish(getStatus, "changeUpEvent OK");
 			Serial.println("changeUpEvent OK");
+			PrintMessage("changeUpEvent");
 		}
-		else if (payload == "continueTransmin")
+		else if (WorkMode.equals("continueTransmin"))
 		{
 			receiveEvent = continueTransmin;
-			client.publish(getStatus, "continueTransmin OK");
 			Serial.println("continueTransmin OK");
-		}
-		else if (payload == "data1")
-		{
-			client.publish(getData1, String(pinState));
-			Serial.println(pinState);
+			PrintMessage("continueTransmin");
 		}
 		else
 		{
-			client.publish(getStatus, "OK");
-			Serial.println("OK");
+			//PrintStatus();
+			Serial.println("undefined mes");
 		}
 	}
+}
+
+int UID = 0;
+
+void PrintMessage(String str, int status)
+{
+	String data = "<Module>\
+	<Name>" + String(deviceName) +
+				  "</Name>\
+	<ModuleType>" +
+				  moduleType + "</ModuleType>\
+	<UID>" + String(UID) +
+				  "</UID>\
+	<Data>" + str +
+				  "</Data>\
+	<Status>" + String(status) +
+				  "</Status>\
+	</Module>";
+	client.publish(outDevices, data);
+
+	UID++;
+}
+
+void PrintButtonStatus(bool pinState)
+{
+	String data = "<Module>\
+	<Name>" + String(deviceName) +
+				  "</Name>\
+	<ModuleType>" +
+				  moduleType + "</ModuleType>\
+	<UID>" + String(UID) +
+				  "</UID>\
+	<Data><Pin16>" +
+				  String(pinState) +
+				  "</Pin16></Data>\
+	<Status>0</Status>\
+	</Module>";
+	client.publish(outDevices, data);
+
+	UID++;
+}
+
+void PrintStatus()
+{
+	String data = "<Module>\
+	<Name>" + String(deviceName) +
+				  "</Name>\
+	<ModuleType>" +
+				  moduleType + "</ModuleType>\
+	<UID>" + String(UID) +
+				  "</UID>\
+	<Status>0</Status>\
+	</Module>";
+	client.publish(outDevices, data);
+
+	UID++;
+}
+
+String findText(String str, String findContext)
+{
+
+	int find1 = str.indexOf("<" + findContext + ">");
+	int find2 = str.indexOf("</" + findContext + ">");
+	if ((find1 < 1) || (find2 < 1))
+		return "";
+	String findStr = "";
+	for (int i = find1 + ("<" + findContext + ">").length(); i < find2; i++)
+	{
+		findStr += str[i];
+	}
+
+	return findStr;
 }

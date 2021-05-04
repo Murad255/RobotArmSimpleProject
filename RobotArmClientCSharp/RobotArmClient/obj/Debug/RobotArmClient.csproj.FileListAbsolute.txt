@@ -1,0 +1,11 @@
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\bin\Debug\RobotArmClient.exe.config
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\bin\Debug\RobotArmClient.exe
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\bin\Debug\RobotArmClient.pdb
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\bin\Debug\M2Mqtt.Net.dll
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\bin\Debug\MQTTnet.dll
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\bin\Debug\M2Mqtt.Net.pdb
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\obj\Debug\RobotArmClient.csprojAssemblyReference.cache
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\obj\Debug\RobotArmClient.csproj.CoreCompileInputs.cache
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\obj\Debug\RobotArmClient.csproj.CopyComplete
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\obj\Debug\RobotArmClient.exe
+G:\GoogleDisck\WORKSPACE\RobotArmSimpleProject\RobotArmClient\RobotArmClient\obj\Debug\RobotArmClient.pdb

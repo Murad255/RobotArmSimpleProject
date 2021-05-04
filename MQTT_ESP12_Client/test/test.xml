@@ -1,0 +1,49 @@
+Task111 = 
+<Manipulator>
+	<UID>111</UID>
+	<Task>
+		<Program>163</Program>
+		<!-- <Type>0</Type>
+		<Slot>0</Slot>
+		<Order>0</Order>
+		<Argument>
+			<ox>-100</ox>
+			<oy>0</oy>
+			<oz>-20</oz>
+		</Argument> -->
+	</Task>
+	<Status>1</Status>
+</Manipulator>
+
+
+<Module>
+	<Name>button1</Name>
+	<ModuleType>2</ModuleType>
+	<UID>111</UID>
+	<Status>1</Status>
+	<Data>
+		<Pin16>pinState</Pin16>
+		<Led>1</Led>
+	</Data>
+</Module>
+
+<Manipulator>\
+	<UID>111</UID>\
+	<Task>
+		<Program>163</Program>
+	</Task>
+	<Status>0</Status>
+</Manipulator>
+
+
+<Module>
+	<Name>RobotKuka</Name>
+	<ModuleType>1</ModuleType>
+	<UID>111</UID>
+	<Status>1</Status>
+	<Data>
+		<Task>
+			<Program>163</Program>
+		</Task>
+	</Data>
+</Module>
