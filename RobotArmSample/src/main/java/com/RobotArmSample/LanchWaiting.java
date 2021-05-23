@@ -29,10 +29,11 @@ public class LanchWaiting implements JavaDelegate {
     public void execute(DelegateExecution delegateExecution) throws Exception {
 
         System.out.println( "Ожидание команды запуска!" );
+
         IotModules.WatсherAvailable();
 
-        runtimeService= ProcessEngines.getDefaultProcessEngine().getRuntimeService();
-        runtimeService.signalEventReceived("SignalClient");//,"Event_0lmll94");
+       // runtimeService= ProcessEngines.getDefaultProcessEngine().getRuntimeService();
+      //  runtimeService.signalEventReceived("SignalClient");//,"Event_0lmll94");
 
     }
 

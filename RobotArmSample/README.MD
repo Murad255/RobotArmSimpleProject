@@ -41,6 +41,9 @@
         <Request>status</Request>
         <Report>reportMessage</Report>
         <WorkMode>mode</WorkMode>
+        <Slot> 
+            <Status>
+        </Slot>
     </Data>  
 </Module>
 ```
@@ -83,4 +86,21 @@ ModuleType:
 * 1 - RobotArm (манипулятор)
 * 2 - Modules (датчики, конвееры, всё остальное)
 
+Data - контекст с принимаемыми данными
 
+Task - задача для выподнения устройством :
+* Program - номер программы
+
+Request - для запроса параметров и данных (например status)
+
+Report - сообшение от устройства, отчёт об ошибке
+
+
+
+
+требование к протоколу передачи данных
+
+сравнивая с ModBus
+
+гарантированная доставка
+работа в mash сетях 

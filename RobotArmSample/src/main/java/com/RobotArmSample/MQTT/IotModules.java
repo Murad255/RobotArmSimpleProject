@@ -5,10 +5,7 @@ import org.eclipse.paho.client.mqttv3.MqttAsyncClient;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 
 import javax.swing.plaf.PanelUI;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
-import java.util.UUID;
+import java.util.*;
 
 public  class IotModules {
     public static MqttAsyncClient myClient;
@@ -16,7 +13,7 @@ public  class IotModules {
     public static ArrayList<String> RobotArmName;
 
     // static String serverUrl = "tcp://172.16.1.33:1883";
-    static String serverUrl = "tcp://mqtt.eclipseprojects.io:1883";
+    static String serverUrl ="tcp://mqtt.eclipseprojects.io:1883";
 
     static String inDevices = "userM/devices/in";
     static String outDevices = "userM/devices/out";
@@ -84,6 +81,7 @@ public  class IotModules {
             }
         }
     }
+
 //    // todo
 //    public static boolean RollCall()throws Exception{
 //        myCallback.StackMessageClear();
@@ -110,7 +108,7 @@ public  class IotModules {
         Stack<String> stackMessage = new Stack<String>();
         int numPast = IotModules.myCallback.getStackMessage().size();
         IotModules.InDevicesData(ModuleType.robotArm,"all","<Request>status</Request>");
-        Thread.sleep(700);
+        Thread.sleep(800);
 
         int newMessagesCount = IotModules.myCallback.getStackMessage().size()-numPast;
         if(newMessagesCount<=0) throw  new Exception("Robot Arm not Found");
@@ -122,7 +120,14 @@ public  class IotModules {
             }
         }
 
-        if(stackMessage.size()>0)return  stackMessage.pop();
+        if(stackMessage.size()>0){
+            if(stackMessage.size()==1)     return  stackMessage.pop();
+            else {
+                final Random random = new Random();
+                int randNum = random.nextInt()%stackMessage.size();
+                return stackMessage.get(randNum);
+            }
+        }
         else throw  new Exception("Robot Arm not Found");
 
     }
@@ -149,10 +154,11 @@ public  class IotModules {
         }while (!status);
     }
 
-    public static boolean  waitStatusСonfirmed(String name,int mulles ) throws Exception {
-        InDevicesData(ModuleType.all,button1Name,"<Request>status</Request>");
-        //проверяем ответ 10 раз в течение периода приёма
+    public static boolean  waitStatusСonfirmed(String name,int mulles )  {
+
         try {
+            InDevicesData(ModuleType.all,button1Name,"<Request>status</Request>");
+            //проверяем ответ 10 раз в течение периода приёма
             for (int i = 0; i<10; i++){
                 Thread.sleep(mulles/10);
                 if(statusСonfirmed(name)) return  true;

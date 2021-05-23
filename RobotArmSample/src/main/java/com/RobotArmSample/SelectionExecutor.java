@@ -7,7 +7,6 @@ import org.camunda.bpm.engine.delegate.BpmnError;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
 import org.springframework.stereotype.Component;
-
 import java.util.Stack;
 
 ///Выбор исполнителя
@@ -17,7 +16,6 @@ public class SelectionExecutor implements JavaDelegate {
     public void execute(DelegateExecution delegateExecution) throws Exception {
         System.out.println( "Выбор исполнителя" );
         try {
-
             String nameExecutor = IotModules.SelectRobotArm();
             IotModules.InWatchCleent("выбран манипулятор\t"+ nameExecutor);
             delegateExecution.setVariable("nameExecutor", nameExecutor);

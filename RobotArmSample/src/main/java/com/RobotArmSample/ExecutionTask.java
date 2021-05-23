@@ -14,7 +14,9 @@ public class ExecutionTask implements JavaDelegate {
         System.out.println( "Выполнение операции (нажать кнопку)!" );
         String nameExecutor =  (String) delegateExecution.getVariable("nameExecutor");
         IotModules.InDevicesData(ModuleType.robotArm,nameExecutor,"<Task><Program>163</Program></Task>");
-        Thread.sleep(5000);
         IotModules.waitingStatusСonfirmed(nameExecutor);
+        Thread.sleep(5);
+        IotModules.InDevicesData(ModuleType.robotArm,"noArm","<Task><Program>163</Program></Task>");
+
     }
 }
